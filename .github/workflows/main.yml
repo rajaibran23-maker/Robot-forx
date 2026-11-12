@@ -1,4 +1,5 @@
 
+
 name: Build GridBot APK
 
 on:
@@ -30,7 +31,7 @@ jobs:
       - name: Accept Android SDK licenses
         run: |
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          yes | "$SDKMANAGER" --licenses
+          yes | "$SDKMANAGER" --licenses || true
 
       - name: Install Android SDK
         run: |
@@ -52,16 +53,14 @@ jobs:
         run: |
           gradle -p source/GridBot_MT5_Project/android-app --no-daemon :app:assembleDebug
 
+      - name: Check APK
+        run: |
+          test -f source/GridBot_MT5_Project/android-app/app/build/outputs/apk/debug/app-debug.apk
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: GridBot-debug-apk
+          name: GridBot-debug-apk-${{ github.run_attempt }}
           path: source/GridBot_MT5_Project/android-app/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-      - name: Upload GridBot APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: GridBot-debug-apk
-          path: source/GridBot_MT5_Project/android-app/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          
+
