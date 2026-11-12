@@ -21,7 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -30,40 +30,34 @@ jobs:
       - name: Accept Android SDK licenses
         run: |
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          test -x "$SDKMANAGER"
-          yes | "$SDKMANAGER" --licenses || true
+          yes | "$SDKMANAGER" --licenses
 
-      - name: Install Android SDK 35
+      - name: Install Android SDK
         run: |
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           "$SDKMANAGER" --install "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Setup Gradle 8.9
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
       - name: Check source ZIP
-        run: |
-          test -f GridBot_MT5_Project_Source_Updated.zip
+        run: test -f GridBot_MT5_Project_Source_Updated.zip
 
       - name: Extract source ZIP
-        run: |
-          unzip -q GridBot_MT5_Project_Source_Updated.zip -d source
+        run: unzip -q GridBot_MT5_Project_Source_Updated.zip -d source
 
-      - name: Verify Android project
+      - name: Build APK
         run: |
-          PROJECT_DIR="source/GridBot_MT5_Project/android-app"
-          test -f "$PROJECT_DIR/build.gradle"
-          test -f "$PROJECT_DIR/settings.gradle"
-          test -f "$PROJECT_DIR/app/build.gradle"
-          test -f "$PROJECT_DIR/app/src/main/AndroidManifest.xml"
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          gradle -p source/GridBot_MT5_Project/android-app --no-daemon :app:assembleDebug
 
-      - name: Build GridBot Debug APK
-        run: |
-          gradle -p "$PROJECT_DIR" --no-daemon :app:assembleDebug
-
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GridBot-debug-apk
+          path: source/GridBot_MT5_Project/android-app/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
       - name: Upload GridBot APK
         uses: actions/upload-artifact@v4
         with:
